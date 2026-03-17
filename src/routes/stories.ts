@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
-import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
+import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { getDb } from '../lib/db'
 import { stories as storiesTable, storyTranslations } from '../lib/schema'
 import type { Bindings } from '../lib/bindings'
@@ -43,7 +43,10 @@ stories.openapi(
         path: '/',
         tags: ['Stories'],
         summary: 'List Stories',
-        request: { query: PaginationQuerySchema },
+        request: {
+            query: PaginationQuerySchema,
+            headers: LanguageHeaderSchema,
+        },
         responses: {
             200: {
                 description: 'Stories fetched successfully',
@@ -52,7 +55,8 @@ stories.openapi(
         },
     }),
     async (c) => {
-        const { lang, pageIndex, pageSize } = c.req.valid('query')
+        const { pageIndex, pageSize } = c.req.valid('query')
+        const { 'Accept-Language': lang } = c.req.valid('header')
         const db = getDb(c.env.DB)
 
         const [items, [{ total }]] = await Promise.all([

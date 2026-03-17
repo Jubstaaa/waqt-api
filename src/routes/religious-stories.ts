@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
-import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
+import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { getDb } from '../lib/db'
 import { religiousStories as religiousStoriesTable, religiousStoryTranslations } from '../lib/schema'
 import type { Bindings } from '../lib/bindings'
@@ -9,7 +9,7 @@ const ReligiousStoryItemSchema = z.object({
     id: z.string().uuid(),
     order: z.number(),
     imageUrl: z.string().url().nullable(),
-    videoUrl: z.string().url().nullable(),
+    mediaUrl: z.string().url().nullable(),
     title: z.string(),
     description: z.string(),
     content: z.string(),
@@ -26,7 +26,10 @@ religiousStories.openapi(
         path: '/',
         tags: ['Religious Stories'],
         summary: 'List Religious Stories',
-        request: { query: PaginationQuerySchema },
+        request: {
+            query: PaginationQuerySchema,
+            headers: LanguageHeaderSchema,
+        },
         responses: {
             200: {
                 description: 'Religious stories fetched successfully',
@@ -35,7 +38,8 @@ religiousStories.openapi(
         },
     }),
     async (c) => {
-        const { lang, pageIndex, pageSize } = c.req.valid('query')
+        const { pageIndex, pageSize } = c.req.valid('query')
+        const { 'Accept-Language': lang } = c.req.valid('header')
         const db = getDb(c.env.DB)
 
         const [items, [{ total }]] = await Promise.all([
@@ -43,7 +47,7 @@ religiousStories.openapi(
                 id: religiousStoriesTable.id,
                 order: religiousStoriesTable.order,
                 imageUrl: religiousStoriesTable.imageUrl,
-                videoUrl: religiousStoriesTable.videoUrl,
+                mediaUrl: religiousStoriesTable.mediaUrl,
                 title: religiousStoryTranslations.title,
                 description: religiousStoryTranslations.description,
                 content: religiousStoryTranslations.content,

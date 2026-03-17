@@ -37,7 +37,7 @@ export const religiousStories = sqliteTable('religious_stories', {
     id: text('id').primaryKey(),
     order: integer('order').notNull(),
     imageUrl: text('image_url'),
-    videoUrl: text('video_url'),
+    mediaUrl: text('media_url'),
     isActive: integer('is_active').notNull(),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull(),

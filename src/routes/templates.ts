@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
-import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
+import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { getDb } from '../lib/db'
 import { templates as templatesTable, templateTranslations } from '../lib/schema'
 import type { Bindings } from '../lib/bindings'
@@ -23,7 +23,10 @@ templates.openapi(
         path: '/',
         tags: ['Templates'],
         summary: 'List Templates',
-        request: { query: PaginationQuerySchema },
+        request: {
+            query: PaginationQuerySchema,
+            headers: LanguageHeaderSchema,
+        },
         responses: {
             200: {
                 description: 'Templates fetched successfully',
@@ -32,7 +35,8 @@ templates.openapi(
         },
     }),
     async (c) => {
-        const { lang, pageIndex, pageSize } = c.req.valid('query')
+        const { pageIndex, pageSize } = c.req.valid('query')
+        const { 'Accept-Language': lang } = c.req.valid('header')
         const db = getDb(c.env.DB)
 
         const [items, [{ total }]] = await Promise.all([

@@ -6,6 +6,7 @@ import faqs from './routes/faqs'
 import stories from './routes/stories'
 import religiousStories from './routes/religious-stories'
 import templates from './routes/templates'
+import config from './routes/config'
 import type { Bindings } from './lib/bindings'
 
 const app = new OpenAPIHono<{ Bindings: Bindings }>()
@@ -19,6 +20,7 @@ app.route('/faqs', faqs)
 app.route('/stories', stories)
 app.route('/religious-stories', religiousStories)
 app.route('/templates', templates)
+app.route('/config', config)
 
 app.doc('/openapi.json', {
     openapi: '3.0.0',

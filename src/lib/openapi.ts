@@ -6,9 +6,30 @@ export const SUPPORTED_LANGUAGES = [
     'ps', 'pt', 'ru', 'so', 'sq', 'sv', 'sw', 'ta', 'th', 'ur', 'uz', 'zh',
 ] as const
 
-export const LangParam = z.enum(SUPPORTED_LANGUAGES).default('tr').openapi({
-    param: { name: 'lang', in: 'query' },
-    example: 'tr',
+export const LangParam = z
+    .preprocess(
+        (val) => {
+            if (typeof val !== 'string') return 'en'
+            // "en,en-US;q=0.9,tr;q=0.8" -> "en"
+            const lang = val.split(',')[0].split(';')[0].split('-')[0].toLowerCase()
+            return SUPPORTED_LANGUAGES.includes(lang as any) ? lang : 'en'
+        },
+        z.enum(SUPPORTED_LANGUAGES).default('en'),
+    )
+    .openapi({
+        param: {
+            name: 'Accept-Language',
+            in: 'header',
+            description: 'Standard Accept-Language header',
+        },
+        example: 'en',
+        type: 'string',
+        enum: [...SUPPORTED_LANGUAGES],
+        default: 'en',
+    })
+
+export const LanguageHeaderSchema = z.object({
+    'Accept-Language': LangParam,
 })
 
 export const PageIndexParam = z.coerce.number().int().min(0).default(0).openapi({
@@ -22,7 +43,6 @@ export const PageSizeParam = z.coerce.number().int().min(1).max(100).default(10)
 })
 
 export const PaginationQuerySchema = z.object({
-    lang: LangParam,
     pageIndex: PageIndexParam,
     pageSize: PageSizeParam,
 })
