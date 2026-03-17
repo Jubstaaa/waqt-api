@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 account_id = "3f3477575d9d049c84f20acfccb9a89a"
 
+[[routes]]
+pattern = "waqt-api.haccoo.dev/*"
+zone_name = "haccoo.dev"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "waqt-db"
