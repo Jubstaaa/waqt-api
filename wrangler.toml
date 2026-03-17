@@ -1,0 +1,9 @@
+name = "waqt-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+account_id = "3f3477575d9d049c84f20acfccb9a89a"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "waqt-db"
+database_id = "d9c5e017-5312-48df-8985-b90277d88555"

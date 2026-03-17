@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "dev": "bun --hot src/index.ts",
-        "start": "bun src/index.ts",
+        "dev": "wrangler dev",
+        "deploy": "wrangler deploy",
         "lint": "eslint src",
         "lint:fix": "eslint src --fix",
         "format": "prettier --write src"
@@ -12,17 +12,18 @@
     "dependencies": {
         "@hono/zod-openapi": "0.18.3",
         "@scalar/hono-api-reference": "^0.10.3",
-        "@supabase/supabase-js": "^2.49.1",
         "hono": "^4.7.4",
         "zod": "^3.24.2"
     },
     "devDependencies": {
+        "@cloudflare/workers-types": "^4.20260317.1",
         "@types/bun": "^1.2.6",
         "@typescript-eslint/eslint-plugin": "^8.57.1",
         "@typescript-eslint/parser": "^8.57.1",
         "eslint": "^10.0.3",
         "eslint-config-prettier": "^10.1.8",
         "prettier": "^3.8.1",
-        "typescript": "^5.8.2"
+        "typescript": "^5.8.2",
+        "wrangler": "^4.74.0"
     }
 }

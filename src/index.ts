@@ -5,8 +5,9 @@ import { logger } from 'hono/logger'
 import faqs from './routes/faqs'
 import stories from './routes/stories'
 import templates from './routes/templates'
+import type { Bindings } from './lib/bindings'
 
-const app = new OpenAPIHono()
+const app = new OpenAPIHono<{ Bindings: Bindings }>()
 
 app.use('*', logger())
 app.use('*', cors())
@@ -26,8 +27,4 @@ app.get('/docs', apiReference({ spec: { url: '/openapi.json' } }))
 
 app.notFound((c) => c.json({ message: 'Not found' }, 404))
 
-const port = Number(process.env.PORT) || 3000
-console.log(`Server running on port ${port}`)
-console.log(`Docs: http://localhost:${port}/docs`)
-
-export default { port, fetch: app.fetch }
+export default app

@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
-import { mockFaqs } from '../lib/mock-data'
+import type { Bindings } from '../lib/bindings'
 
 const FaqItemSchema = z.object({
     id: z.string().uuid(),
@@ -12,7 +12,7 @@ const FaqItemSchema = z.object({
     updatedAt: z.string(),
 }).openapi('FaqItem')
 
-const faqs = new OpenAPIHono()
+const faqs = new OpenAPIHono<{ Bindings: Bindings }>()
 
 faqs.openapi(
     createRoute({
@@ -28,29 +28,51 @@ faqs.openapi(
             },
         },
     }),
-    (c) => {
+    async (c) => {
         const { lang, pageIndex, pageSize } = c.req.valid('query')
+        const offset = pageIndex * pageSize
 
-        const active = mockFaqs.filter((f) => f.is_active)
-        const paged = active.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize)
+        const [{ results: items }, { results: countResult }] = await Promise.all([
+            c.env.DB.prepare(`
+                SELECT f.id, f."order", f.created_at, f.updated_at,
+                       t.question, t.answer, t.language
+                FROM faqs f
+                JOIN faq_translations t ON t.faq_id = f.id
+                WHERE f.is_active = 1 AND t.language = ?
+                ORDER BY f."order" ASC
+                LIMIT ? OFFSET ?
+            `).bind(lang, pageSize, offset).all<{
+                id: string
+                order: number
+                created_at: string
+                updated_at: string
+                question: string
+                answer: string
+                language: string
+            }>(),
+            c.env.DB.prepare(`
+                SELECT COUNT(*) as count FROM faqs WHERE is_active = 1
+            `).all<{ count: number }>(),
+        ])
 
-        const items = paged.map((faq) => {
-            const translation = faq.faq_translations.find((t) => t.language === lang)
-                ?? faq.faq_translations[0]
-            return {
-                id: faq.id,
-                order: faq.order,
-                question: translation.question,
-                answer: translation.answer,
-                language: translation.language,
-                createdAt: faq.created_at,
-                updatedAt: faq.updated_at,
-            }
-        })
+        const totalCount = countResult[0]?.count ?? 0
 
         return c.json({
             message: 'FAQs fetched successfully',
-            data: { ...paginate(pageIndex, pageSize, active.length), items, requestedLanguage: lang, returnedLanguage: lang },
+            data: {
+                ...paginate(pageIndex, pageSize, totalCount),
+                items: items.map((f) => ({
+                    id: f.id,
+                    order: f.order,
+                    question: f.question,
+                    answer: f.answer,
+                    language: f.language,
+                    createdAt: f.created_at,
+                    updatedAt: f.updated_at,
+                })),
+                requestedLanguage: lang,
+                returnedLanguage: lang,
+            },
         })
     },
 )
