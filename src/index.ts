@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import faqs from './routes/faqs'
 import stories from './routes/stories'
+import religiousStories from './routes/religious-stories'
 import templates from './routes/templates'
 import type { Bindings } from './lib/bindings'
 
@@ -16,6 +17,7 @@ app.get('/', (c) => c.json({ status: 'ok', version: '1.0.0' }))
 
 app.route('/faqs', faqs)
 app.route('/stories', stories)
+app.route('/religious-stories', religiousStories)
 app.route('/templates', templates)
 
 app.doc('/openapi.json', {
