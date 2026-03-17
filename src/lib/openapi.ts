@@ -1,6 +1,12 @@
 import { z } from '@hono/zod-openapi'
 
-export const LangParam = z.enum(['tr', 'en', 'ar']).default('tr').openapi({
+export const SUPPORTED_LANGUAGES = [
+    'tr', 'en', 'ar', 'az', 'am', 'bn', 'bs', 'ckb', 'de', 'es', 'fa',
+    'fr', 'ha', 'hi', 'id', 'it', 'ja', 'ko', 'ml', 'ms', 'nb', 'nl',
+    'ps', 'pt', 'ru', 'so', 'sq', 'sv', 'sw', 'ta', 'th', 'ur', 'uz', 'zh',
+] as const
+
+export const LangParam = z.enum(SUPPORTED_LANGUAGES).default('tr').openapi({
     param: { name: 'lang', in: 'query' },
     example: 'tr',
 })
