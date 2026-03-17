@@ -1,5 +1,8 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
+import { eq, and, asc, count } from 'drizzle-orm'
 import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
+import { getDb } from '../lib/db'
+import { faqs as faqsTable, faqTranslations } from '../lib/schema'
 import type { Bindings } from '../lib/bindings'
 
 const FaqItemSchema = z.object({
@@ -30,46 +33,34 @@ faqs.openapi(
     }),
     async (c) => {
         const { lang, pageIndex, pageSize } = c.req.valid('query')
-        const offset = pageIndex * pageSize
+        const db = getDb(c.env.DB)
 
-        const [{ results: items }, { results: countResult }] = await Promise.all([
-            c.env.DB.prepare(`
-                SELECT f.id, f."order", f.created_at, f.updated_at,
-                       t.question, t.answer, t.language
-                FROM faqs f
-                JOIN faq_translations t ON t.faq_id = f.id
-                WHERE f.is_active = 1 AND t.language = ?
-                ORDER BY f."order" ASC
-                LIMIT ? OFFSET ?
-            `).bind(lang, pageSize, offset).all<{
-                id: string
-                order: number
-                created_at: string
-                updated_at: string
-                question: string
-                answer: string
-                language: string
-            }>(),
-            c.env.DB.prepare(`
-                SELECT COUNT(*) as count FROM faqs WHERE is_active = 1
-            `).all<{ count: number }>(),
+        const [items, [{ total }]] = await Promise.all([
+            db.select({
+                id: faqsTable.id,
+                order: faqsTable.order,
+                question: faqTranslations.question,
+                answer: faqTranslations.answer,
+                language: faqTranslations.language,
+                createdAt: faqsTable.createdAt,
+                updatedAt: faqsTable.updatedAt,
+            })
+                .from(faqsTable)
+                .innerJoin(faqTranslations, eq(faqTranslations.faqId, faqsTable.id))
+                .where(and(eq(faqsTable.isActive, 1), eq(faqTranslations.language, lang)))
+                .orderBy(asc(faqsTable.order))
+                .limit(pageSize)
+                .offset(pageIndex * pageSize),
+            db.select({ total: count() })
+                .from(faqsTable)
+                .where(eq(faqsTable.isActive, 1)),
         ])
-
-        const totalCount = countResult[0]?.count ?? 0
 
         return c.json({
             message: 'FAQs fetched successfully',
             data: {
-                ...paginate(pageIndex, pageSize, totalCount),
-                items: items.map((f) => ({
-                    id: f.id,
-                    order: f.order,
-                    question: f.question,
-                    answer: f.answer,
-                    language: f.language,
-                    createdAt: f.created_at,
-                    updatedAt: f.updated_at,
-                })),
+                ...paginate(pageIndex, pageSize, total),
+                items,
                 requestedLanguage: lang,
                 returnedLanguage: lang,
             },

@@ -1,5 +1,8 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
+import { eq, and, asc, count } from 'drizzle-orm'
 import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
+import { getDb } from '../lib/db'
+import { templates as templatesTable, templateTranslations } from '../lib/schema'
 import type { Bindings } from '../lib/bindings'
 
 const TemplateItemSchema = z.object({
@@ -30,46 +33,34 @@ templates.openapi(
     }),
     async (c) => {
         const { lang, pageIndex, pageSize } = c.req.valid('query')
-        const offset = pageIndex * pageSize
+        const db = getDb(c.env.DB)
 
-        const [{ results: items }, { results: countResult }] = await Promise.all([
-            c.env.DB.prepare(`
-                SELECT t.id, t."order", t.image_url, t.created_at, t.updated_at,
-                       tr.text, tr.language
-                FROM templates t
-                JOIN template_translations tr ON tr.template_id = t.id
-                WHERE t.is_active = 1 AND tr.language = ?
-                ORDER BY t."order" ASC
-                LIMIT ? OFFSET ?
-            `).bind(lang, pageSize, offset).all<{
-                id: string
-                order: number
-                image_url: string | null
-                created_at: string
-                updated_at: string
-                text: string
-                language: string
-            }>(),
-            c.env.DB.prepare(`
-                SELECT COUNT(*) as count FROM templates WHERE is_active = 1
-            `).all<{ count: number }>(),
+        const [items, [{ total }]] = await Promise.all([
+            db.select({
+                id: templatesTable.id,
+                order: templatesTable.order,
+                imageUrl: templatesTable.imageUrl,
+                text: templateTranslations.text,
+                language: templateTranslations.language,
+                createdAt: templatesTable.createdAt,
+                updatedAt: templatesTable.updatedAt,
+            })
+                .from(templatesTable)
+                .innerJoin(templateTranslations, eq(templateTranslations.templateId, templatesTable.id))
+                .where(and(eq(templatesTable.isActive, 1), eq(templateTranslations.language, lang)))
+                .orderBy(asc(templatesTable.order))
+                .limit(pageSize)
+                .offset(pageIndex * pageSize),
+            db.select({ total: count() })
+                .from(templatesTable)
+                .where(eq(templatesTable.isActive, 1)),
         ])
-
-        const totalCount = countResult[0]?.count ?? 0
 
         return c.json({
             message: 'Templates fetched successfully',
             data: {
-                ...paginate(pageIndex, pageSize, totalCount),
-                items: items.map((t) => ({
-                    id: t.id,
-                    order: t.order,
-                    imageUrl: t.image_url,
-                    text: t.text,
-                    language: t.language,
-                    createdAt: t.created_at,
-                    updatedAt: t.updated_at,
-                })),
+                ...paginate(pageIndex, pageSize, total),
+                items,
                 requestedLanguage: lang,
                 returnedLanguage: lang,
             },

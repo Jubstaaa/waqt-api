@@ -1,5 +1,8 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
+import { eq, and, asc, count } from 'drizzle-orm'
 import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
+import { getDb } from '../lib/db'
+import { religiousStories as religiousStoriesTable, religiousStoryTranslations } from '../lib/schema'
 import type { Bindings } from '../lib/bindings'
 
 const ReligiousStoryItemSchema = z.object({
@@ -33,52 +36,40 @@ religiousStories.openapi(
     }),
     async (c) => {
         const { lang, pageIndex, pageSize } = c.req.valid('query')
-        const offset = pageIndex * pageSize
+        const db = getDb(c.env.DB)
 
-        const [{ results: items }, { results: countResult }] = await Promise.all([
-            c.env.DB.prepare(`
-                SELECT s.id, s."order", s.image_url, s.video_url, s.created_at, s.updated_at,
-                       t.title, t.description, t.content, t.language
-                FROM religious_stories s
-                JOIN religious_story_translations t ON t.story_id = s.id
-                WHERE s.is_active = 1 AND t.language = ?
-                ORDER BY s."order" ASC
-                LIMIT ? OFFSET ?
-            `).bind(lang, pageSize, offset).all<{
-                id: string
-                order: number
-                image_url: string | null
-                video_url: string | null
-                created_at: string
-                updated_at: string
-                title: string
-                description: string
-                content: string
-                language: string
-            }>(),
-            c.env.DB.prepare(`
-                SELECT COUNT(*) as count FROM religious_stories WHERE is_active = 1
-            `).all<{ count: number }>(),
+        const [items, [{ total }]] = await Promise.all([
+            db.select({
+                id: religiousStoriesTable.id,
+                order: religiousStoriesTable.order,
+                imageUrl: religiousStoriesTable.imageUrl,
+                videoUrl: religiousStoriesTable.videoUrl,
+                title: religiousStoryTranslations.title,
+                description: religiousStoryTranslations.description,
+                content: religiousStoryTranslations.content,
+                language: religiousStoryTranslations.language,
+                createdAt: religiousStoriesTable.createdAt,
+                updatedAt: religiousStoriesTable.updatedAt,
+            })
+                .from(religiousStoriesTable)
+                .innerJoin(
+                    religiousStoryTranslations,
+                    eq(religiousStoryTranslations.storyId, religiousStoriesTable.id),
+                )
+                .where(and(eq(religiousStoriesTable.isActive, 1), eq(religiousStoryTranslations.language, lang)))
+                .orderBy(asc(religiousStoriesTable.order))
+                .limit(pageSize)
+                .offset(pageIndex * pageSize),
+            db.select({ total: count() })
+                .from(religiousStoriesTable)
+                .where(eq(religiousStoriesTable.isActive, 1)),
         ])
-
-        const totalCount = countResult[0]?.count ?? 0
 
         return c.json({
             message: 'Religious stories fetched successfully',
             data: {
-                ...paginate(pageIndex, pageSize, totalCount),
-                items: items.map((s) => ({
-                    id: s.id,
-                    order: s.order,
-                    imageUrl: s.image_url,
-                    videoUrl: s.video_url,
-                    title: s.title,
-                    description: s.description,
-                    content: s.content,
-                    language: s.language,
-                    createdAt: s.created_at,
-                    updatedAt: s.updated_at,
-                })),
+                ...paginate(pageIndex, pageSize, total),
+                items,
                 requestedLanguage: lang,
                 returnedLanguage: lang,
             },

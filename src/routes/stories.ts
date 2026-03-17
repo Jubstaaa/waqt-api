@@ -1,16 +1,10 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
+import { eq, and, asc, count } from 'drizzle-orm'
 import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
+import { getDb } from '../lib/db'
+import { stories as storiesTable, storyTranslations } from '../lib/schema'
 import type { Bindings } from '../lib/bindings'
 
-/**
- * Story type enum:
- * 0 = none
- * 1 = ayah
- * 2 = hadith
- * 3 = dua
- * 4 = lesson
- * 5 = religiousStory
- */
 export const STORY_TYPE = {
     none: 0,
     ayah: 1,
@@ -59,52 +53,37 @@ stories.openapi(
     }),
     async (c) => {
         const { lang, pageIndex, pageSize } = c.req.valid('query')
-        const offset = pageIndex * pageSize
+        const db = getDb(c.env.DB)
 
-        const [{ results: items }, { results: countResult }] = await Promise.all([
-            c.env.DB.prepare(`
-                SELECT s.id, s."order", s.type, s.cover_image_url, s.content_image_url,
-                       s.created_at, s.updated_at, t.title, t.description, t.language
-                FROM stories s
-                JOIN story_translations t ON t.story_id = s.id
-                WHERE s.is_active = 1 AND t.language = ?
-                ORDER BY s."order" ASC
-                LIMIT ? OFFSET ?
-            `).bind(lang, pageSize, offset).all<{
-                id: string
-                order: number
-                type: number
-                cover_image_url: string | null
-                content_image_url: string | null
-                created_at: string
-                updated_at: string
-                title: string
-                description: string
-                language: string
-            }>(),
-            c.env.DB.prepare(`
-                SELECT COUNT(*) as count FROM stories WHERE is_active = 1
-            `).all<{ count: number }>(),
+        const [items, [{ total }]] = await Promise.all([
+            db.select({
+                id: storiesTable.id,
+                order: storiesTable.order,
+                type: storiesTable.type,
+                coverImageUrl: storiesTable.coverImageUrl,
+                contentImageUrl: storiesTable.contentImageUrl,
+                title: storyTranslations.title,
+                description: storyTranslations.description,
+                language: storyTranslations.language,
+                createdAt: storiesTable.createdAt,
+                updatedAt: storiesTable.updatedAt,
+            })
+                .from(storiesTable)
+                .innerJoin(storyTranslations, eq(storyTranslations.storyId, storiesTable.id))
+                .where(and(eq(storiesTable.isActive, 1), eq(storyTranslations.language, lang)))
+                .orderBy(asc(storiesTable.order))
+                .limit(pageSize)
+                .offset(pageIndex * pageSize),
+            db.select({ total: count() })
+                .from(storiesTable)
+                .where(eq(storiesTable.isActive, 1)),
         ])
-
-        const totalCount = countResult[0]?.count ?? 0
 
         return c.json({
             message: 'Stories fetched successfully',
             data: {
-                ...paginate(pageIndex, pageSize, totalCount),
-                items: items.map((s) => ({
-                    id: s.id,
-                    order: s.order,
-                    type: s.type,
-                    coverImageUrl: s.cover_image_url,
-                    contentImageUrl: s.content_image_url,
-                    title: s.title,
-                    description: s.description,
-                    language: s.language,
-                    createdAt: s.created_at,
-                    updatedAt: s.updated_at,
-                })),
+                ...paginate(pageIndex, pageSize, total),
+                items,
                 requestedLanguage: lang,
                 returnedLanguage: lang,
             },
