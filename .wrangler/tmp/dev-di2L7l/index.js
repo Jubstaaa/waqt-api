@@ -8468,11 +8468,13 @@ faqs.openapi(
 var faqs_default = faqs;
 
 // src/routes/stories.ts
-var StoryType = external_exports.enum(["none", "ayah", "hadith", "dua", "lesson", "religiousStory"]);
 var StoryItemSchema = external_exports.object({
   id: external_exports.string().uuid(),
   order: external_exports.number(),
-  type: StoryType,
+  type: external_exports.number().int().min(0).max(5).openapi({
+    description: "0=none, 1=ayah, 2=hadith, 3=dua, 4=lesson, 5=religiousStory",
+    example: 1
+  }),
   coverImageUrl: external_exports.string().url().nullable(),
   contentImageUrl: external_exports.string().url().nullable(),
   title: external_exports.string(),

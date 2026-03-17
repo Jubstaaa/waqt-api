@@ -2,12 +2,36 @@ import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { PaginationQuerySchema, paginatedResponse, paginate } from '../lib/openapi'
 import type { Bindings } from '../lib/bindings'
 
-const StoryType = z.enum(['none', 'ayah', 'hadith', 'dua', 'lesson', 'religiousStory'])
+/**
+ * Story type enum:
+ * 0 = none
+ * 1 = ayah
+ * 2 = hadith
+ * 3 = dua
+ * 4 = lesson
+ * 5 = religiousStory
+ */
+export const STORY_TYPE = {
+    none: 0,
+    ayah: 1,
+    hadith: 2,
+    dua: 3,
+    lesson: 4,
+    religiousStory: 5,
+} as const
 
 const StoryItemSchema = z.object({
     id: z.string().uuid(),
     order: z.number(),
-    type: StoryType,
+    type: z
+        .number()
+        .int()
+        .min(0)
+        .max(5)
+        .openapi({
+            description: '0=none, 1=ayah, 2=hadith, 3=dua, 4=lesson, 5=religiousStory',
+            example: 1,
+        }),
     coverImageUrl: z.string().url().nullable(),
     contentImageUrl: z.string().url().nullable(),
     title: z.string(),
@@ -49,7 +73,7 @@ stories.openapi(
             `).bind(lang, pageSize, offset).all<{
                 id: string
                 order: number
-                type: string
+                type: number
                 cover_image_url: string | null
                 content_image_url: string | null
                 created_at: string
