@@ -8,6 +8,13 @@
       "when": 1773781648883,
       "tag": "0000_new_bloodscream",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774026922767,
+      "tag": "0001_majestic_earthquake",
+      "breakpoints": true
     }
   ]
 }

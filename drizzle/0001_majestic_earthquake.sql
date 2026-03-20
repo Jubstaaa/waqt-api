@@ -1,0 +1,1 @@
+ALTER TABLE `religious_story_translations` ADD `media_url` text;
