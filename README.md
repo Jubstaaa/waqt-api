@@ -37,4 +37,4 @@ Every push to `main` runs type-check and lint, builds `ghcr.io/jubstaaa/waqt-api
 
 The database is not in the image. It lives at `/opt/waqt-api/data/waqt.db` on the droplet and is mounted read-only. To change content, edit a copy of that file, upload it over the old one and run `docker compose restart` in `/opt/waqt-api`.
 
-Media is served from the `haccoo` R2 bucket at `cdn.haccoo.dev`.
+Media lives in the `waqt` Space. The database stores only the object path (for example `religious-story/<title>/cover.webp`), and the API prefixes `MEDIA_BASE_URL` (set in `docker-compose.yml`, default `https://waqt.fra1.cdn.digitaloceanspaces.com`) when it builds a response. Values that already start with `http` are returned unchanged. Moving the media means changing that one variable.

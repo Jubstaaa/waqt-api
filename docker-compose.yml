@@ -16,6 +16,8 @@ services:
             timeout: 5s
             retries: 3
             start_period: 10s
+        environment:
+            MEDIA_BASE_URL: https://waqt.fra1.cdn.digitaloceanspaces.com
         ports:
             - '127.0.0.1:3014:3000'
         volumes:

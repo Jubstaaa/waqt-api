@@ -2,6 +2,7 @@ import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
 import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { db } from '../lib/db'
+import { mediaUrl } from '../lib/media'
 import { templates as templatesTable, templateTranslations } from '../lib/schema'
 
 const TemplateItemSchema = z.object({
@@ -62,7 +63,7 @@ templates.openapi(
             message: 'Templates fetched successfully',
             data: {
                 ...paginate(pageIndex, pageSize, total),
-                items,
+                items: items.map((item) => ({ ...item, imageUrl: mediaUrl(item.imageUrl) })),
                 requestedLanguage: lang,
                 returnedLanguage: lang,
             },

@@ -2,6 +2,7 @@ import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
 import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { db } from '../lib/db'
+import { mediaUrl } from '../lib/media'
 import { religiousStories as religiousStoriesTable, religiousStoryTranslations } from '../lib/schema'
 
 const ReligiousStoryItemSchema = z.object({
@@ -92,6 +93,8 @@ religiousStories.openapi(
             message: 'Religious story fetched successfully',
             data: {
                 ...item,
+                imageUrl: mediaUrl(item.imageUrl),
+                mediaUrl: mediaUrl(item.mediaUrl),
                 requestedLanguage: lang,
                 returnedLanguage: lang,
             },
@@ -151,7 +154,11 @@ religiousStories.openapi(
             message: 'Religious stories fetched successfully',
             data: {
                 ...paginate(pageIndex, pageSize, total),
-                items,
+                items: items.map((item) => ({
+                    ...item,
+                    imageUrl: mediaUrl(item.imageUrl),
+                    mediaUrl: mediaUrl(item.mediaUrl),
+                })),
                 requestedLanguage: lang,
                 returnedLanguage: lang,
             },
