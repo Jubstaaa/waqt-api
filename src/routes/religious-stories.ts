@@ -144,7 +144,7 @@ religiousStories.openapi(
                 .where(and(eq(religiousStoriesTable.isActive, 1), eq(religiousStoryTranslations.language, lang)))
                 .orderBy(asc(religiousStoriesTable.order))
                 .limit(pageSize)
-                .offset(pageIndex * pageSize),
+                .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(religiousStoriesTable)
                 .where(eq(religiousStoriesTable.isActive, 1)),

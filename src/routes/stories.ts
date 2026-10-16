@@ -77,7 +77,7 @@ stories.openapi(
                 .where(and(eq(storiesTable.isActive, 1), eq(storyTranslations.language, lang)))
                 .orderBy(asc(storiesTable.order))
                 .limit(pageSize)
-                .offset(pageIndex * pageSize),
+                .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(storiesTable)
                 .where(eq(storiesTable.isActive, 1)),

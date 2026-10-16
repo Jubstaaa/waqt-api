@@ -32,9 +32,9 @@ export const LanguageHeaderSchema = z.object({
     'Accept-Language': LangParam,
 })
 
-export const PageIndexParam = z.coerce.number().int().min(0).default(0).openapi({
+export const PageIndexParam = z.coerce.number().int().min(1).default(1).openapi({
     param: { name: 'pageIndex', in: 'query' },
-    example: 0,
+    example: 1,
 })
 
 export const PageSizeParam = z.coerce.number().int().min(1).max(100).default(10).openapi({
@@ -64,6 +64,6 @@ export function paginatedResponse<T extends z.ZodTypeAny>(itemSchema: T) {
 
 export function paginate(pageIndex: number, pageSize: number, totalCount: number) {
     const maxPageCount = Math.ceil(totalCount / pageSize)
-    const hasNextPage = pageIndex + 1 < maxPageCount
+    const hasNextPage = pageIndex < maxPageCount
     return { pageIndex, hasNextPage, itemCount: totalCount, maxPageCount }
 }

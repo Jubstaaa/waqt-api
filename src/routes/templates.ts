@@ -54,7 +54,7 @@ templates.openapi(
                 .where(and(eq(templatesTable.isActive, 1), eq(templateTranslations.language, lang)))
                 .orderBy(asc(templatesTable.order))
                 .limit(pageSize)
-                .offset(pageIndex * pageSize),
+                .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(templatesTable)
                 .where(eq(templatesTable.isActive, 1)),

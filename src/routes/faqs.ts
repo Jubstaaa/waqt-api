@@ -54,7 +54,7 @@ faqs.openapi(
                 .where(and(eq(faqsTable.isActive, 1), eq(faqTranslations.language, lang)))
                 .orderBy(asc(faqsTable.order))
                 .limit(pageSize)
-                .offset(pageIndex * pageSize),
+                .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(faqsTable)
                 .where(eq(faqsTable.isActive, 1)),
