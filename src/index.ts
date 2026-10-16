@@ -7,9 +7,8 @@ import stories from './routes/stories'
 import religiousStories from './routes/religious-stories'
 import templates from './routes/templates'
 import config from './routes/config'
-import type { Bindings } from './lib/bindings'
 
-const app = new OpenAPIHono<{ Bindings: Bindings }>()
+const app = new OpenAPIHono()
 
 app.use('*', logger())
 app.use('*', cors())
@@ -27,8 +26,11 @@ app.doc('/openapi.json', {
     info: { title: 'Waqt API', version: '1.0.0' },
 })
 
-app.get('/docs', apiReference({ spec: { url: '/openapi.json' } }))
+app.get('/docs', apiReference({ url: '/openapi.json' }))
 
 app.notFound((c) => c.json({ message: 'Not found' }, 404))
 
-export default app
+export default {
+    port: Number(process.env.PORT ?? 3000),
+    fetch: app.fetch,
+}

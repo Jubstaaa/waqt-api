@@ -1,9 +1,8 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
 import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
-import { getDb } from '../lib/db'
+import { db } from '../lib/db'
 import { faqs as faqsTable, faqTranslations } from '../lib/schema'
-import type { Bindings } from '../lib/bindings'
 
 const FaqItemSchema = z.object({
     id: z.string().uuid(),
@@ -15,7 +14,7 @@ const FaqItemSchema = z.object({
     updatedAt: z.string(),
 }).openapi('FaqItem')
 
-const faqs = new OpenAPIHono<{ Bindings: Bindings }>()
+const faqs = new OpenAPIHono()
 
 faqs.openapi(
     createRoute({
@@ -37,7 +36,6 @@ faqs.openapi(
     async (c) => {
         const { pageIndex, pageSize } = c.req.valid('query')
         const { 'Accept-Language': lang } = c.req.valid('header')
-        const db = getDb(c.env.DB)
 
         const [items, [{ total }]] = await Promise.all([
             db.select({

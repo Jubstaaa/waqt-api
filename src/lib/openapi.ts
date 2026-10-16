@@ -12,7 +12,7 @@ export const LangParam = z
             if (typeof val !== 'string') return 'en'
             // "en,en-US;q=0.9,tr;q=0.8" -> "en"
             const lang = val.split(',')[0].split(';')[0].split('-')[0].toLowerCase()
-            return SUPPORTED_LANGUAGES.includes(lang as any) ? lang : 'en'
+            return (SUPPORTED_LANGUAGES as readonly string[]).includes(lang) ? lang : 'en'
         },
         z.enum(SUPPORTED_LANGUAGES).default('en'),
     )

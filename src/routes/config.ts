@@ -1,13 +1,12 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, count } from 'drizzle-orm'
 import { LanguageHeaderSchema } from '../lib/openapi'
-import { getDb } from '../lib/db'
+import { db } from '../lib/db'
 import {
     storyTranslations,
     religiousStoryTranslations,
     templateTranslations,
 } from '../lib/schema'
-import type { Bindings } from '../lib/bindings'
 
 const ConfigResponseSchema = z.object({
     stories: z.boolean(),
@@ -15,7 +14,7 @@ const ConfigResponseSchema = z.object({
     templates: z.boolean(),
 }).openapi('ConfigResponse')
 
-const config = new OpenAPIHono<{ Bindings: Bindings }>()
+const config = new OpenAPIHono()
 
 config.openapi(
     createRoute({
@@ -35,7 +34,6 @@ config.openapi(
     }),
     async (c) => {
         const { 'Accept-Language': lang } = c.req.valid('header')
-        const db = getDb(c.env.DB)
 
         const [storyRes, religiousStoryRes, templateRes] = await Promise.all([
             db.select({ value: count() })
