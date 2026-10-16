@@ -5,8 +5,8 @@ Read-only JSON API for the Waqt app. It serves FAQs, stories, religious stories 
 ## Stack
 
 - Hono with `@hono/zod-openapi` and Zod
-- Drizzle ORM on Cloudflare D1 (SQLite)
-- Cloudflare Workers, deployed with Wrangler
+- Drizzle ORM on SQLite (`bun:sqlite`)
+- Bun, in a Docker container on the webgooh droplet behind the shared Caddy
 - Scalar API reference
 
 ## Endpoints
@@ -23,10 +23,18 @@ Read-only JSON API for the Waqt app. It serves FAQs, stories, religious stories 
 
 ```sh
 bun install
-bun run dev       # wrangler dev
-bun run deploy    # wrangler deploy
+bun run dev         # bun --hot, reads data/waqt.db
+bun run type-check
 bun run lint
 bun run format
 ```
 
-The Worker reads a single binding, `DB`, a D1 database configured in `wrangler.toml`. Drizzle migrations live in `drizzle/`, which is also the D1 `migrations_dir`.
+The API opens the database read-only from `DATABASE_PATH` (default `data/waqt.db`). Drizzle migrations live in `drizzle/`.
+
+## Deploying
+
+Every push to `main` runs type-check and lint, builds `ghcr.io/jubstaaa/waqt-api`, and runs it on the droplet from `/opt/waqt-api` with `docker compose`. Caddy proxies `waqt-api.haccoo.dev` to `127.0.0.1:3014`.
+
+The database is not in the image. It lives at `/opt/waqt-api/data/waqt.db` on the droplet and is mounted read-only. To change content, edit a copy of that file, upload it over the old one and run `docker compose restart` in `/opt/waqt-api`.
+
+Media is served from the `haccoo` R2 bucket at `cdn.haccoo.dev`.
