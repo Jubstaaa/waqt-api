@@ -1,9 +1,0 @@
-node_modules
-data
-drizzle
-scripts
-.git
-.github
-.claude
-*.md
-*.mjs
