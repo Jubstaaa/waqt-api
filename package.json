@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "dev": "bun --hot src/index.ts",
-        "start": "bun src/index.ts",
+        "dev": "wrangler dev",
+        "deploy": "wrangler deploy",
         "type-check": "tsc --noEmit",
         "lint": "eslint src",
         "lint:fix": "eslint src --fix",
@@ -18,13 +18,14 @@
         "zod": "^3.24.2"
     },
     "devDependencies": {
-        "@types/bun": "^1.2.6",
+        "@cloudflare/workers-types": "^5.20261023.1",
         "@typescript-eslint/eslint-plugin": "^8.57.1",
         "@typescript-eslint/parser": "^8.57.1",
         "drizzle-kit": "^0.31.10",
         "eslint": "^10.0.3",
         "eslint-config-prettier": "^10.1.8",
         "prettier": "^3.8.1",
-        "typescript": "^5.8.2"
+        "typescript": "^5.8.2",
+        "wrangler": "^4.152.0"
     }
 }

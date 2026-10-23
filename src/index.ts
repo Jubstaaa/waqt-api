@@ -30,7 +30,4 @@ app.get('/docs', apiReference({ url: '/openapi.json' }))
 
 app.notFound((c) => c.json({ message: 'Not found' }, 404))
 
-export default {
-    port: Number(process.env.PORT ?? 3000),
-    fetch: app.fetch,
-}
+export default app
