@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
-import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
+import { defaultHook, PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { db } from '../lib/db'
 import { mediaUrl } from '../lib/media'
 import { stories as storiesTable, storyTranslations } from '../lib/schema'
@@ -35,7 +35,7 @@ const StoryItemSchema = z.object({
     updatedAt: z.string(),
 }).openapi('StoryItem')
 
-const stories = new OpenAPIHono()
+const stories = new OpenAPIHono({ defaultHook })
 
 stories.openapi(
     createRoute({

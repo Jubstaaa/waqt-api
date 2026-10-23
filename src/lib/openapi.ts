@@ -1,4 +1,6 @@
 import { z } from '@hono/zod-openapi'
+import type { OpenAPIHonoOptions } from '@hono/zod-openapi'
+import type { Env } from 'hono'
 
 export const SUPPORTED_LANGUAGES = [
     'tr', 'en', 'ar', 'az', 'am', 'bn', 'bs', 'ckb', 'de', 'es', 'fa',
@@ -66,4 +68,13 @@ export function paginate(pageIndex: number, pageSize: number, totalCount: number
     const maxPageCount = Math.ceil(totalCount / pageSize)
     const hasNextPage = pageIndex < maxPageCount
     return { pageIndex, hasNextPage, itemCount: totalCount, maxPageCount }
+}
+
+export const defaultHook: OpenAPIHonoOptions<Env>['defaultHook'] = (result, c) => {
+    if (!result.success) {
+        return c.json(
+            { success: false, error: { issues: result.error.issues, name: 'ZodError' } },
+            400,
+        )
+    }
 }

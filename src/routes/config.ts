@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, count } from 'drizzle-orm'
-import { LanguageHeaderSchema } from '../lib/openapi'
+import { defaultHook, LanguageHeaderSchema } from '../lib/openapi'
 import { db } from '../lib/db'
 import {
     storyTranslations,
@@ -14,7 +14,7 @@ const ConfigResponseSchema = z.object({
     templates: z.boolean(),
 }).openapi('ConfigResponse')
 
-const config = new OpenAPIHono()
+const config = new OpenAPIHono({ defaultHook })
 
 config.openapi(
     createRoute({

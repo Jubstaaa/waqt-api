@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
-import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
+import { defaultHook, PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { db } from '../lib/db'
 import { faqs as faqsTable, faqTranslations } from '../lib/schema'
 
@@ -14,7 +14,7 @@ const FaqItemSchema = z.object({
     updatedAt: z.string(),
 }).openapi('FaqItem')
 
-const faqs = new OpenAPIHono()
+const faqs = new OpenAPIHono({ defaultHook })
 
 faqs.openapi(
     createRoute({

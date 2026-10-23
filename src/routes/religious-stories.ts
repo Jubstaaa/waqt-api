@@ -1,6 +1,6 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
 import { eq, and, asc, count } from 'drizzle-orm'
-import { PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
+import { defaultHook, PaginationQuerySchema, LanguageHeaderSchema, paginatedResponse, paginate } from '../lib/openapi'
 import { db } from '../lib/db'
 import { mediaUrl } from '../lib/media'
 import { religiousStories as religiousStoriesTable, religiousStoryTranslations } from '../lib/schema'
@@ -18,7 +18,7 @@ const ReligiousStoryItemSchema = z.object({
     updatedAt: z.string(),
 }).openapi('ReligiousStoryItem')
 
-const religiousStories = new OpenAPIHono()
+const religiousStories = new OpenAPIHono({ defaultHook })
 
 religiousStories.openapi(
     createRoute({
@@ -28,7 +28,7 @@ religiousStories.openapi(
         summary: 'Get Religious Story by ID',
         request: {
             params: z.object({
-                id: z.string().uuid().openapi({ param: { name: 'id', in: 'path' }, example: '550e8400-e29b-41d4-a716-446655440000' }),
+                id: z.guid().openapi({ param: { name: 'id', in: 'path' }, example: '550e8400-e29b-41d4-a716-446655440000' }),
             }),
             headers: LanguageHeaderSchema,
         },
