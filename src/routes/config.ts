@@ -1,10 +1,13 @@
 import { createRoute, z, OpenAPIHono } from '@hono/zod-openapi'
-import { eq, count } from 'drizzle-orm'
+import { eq, and, count } from 'drizzle-orm'
 import { defaultHook, LanguageHeaderSchema } from '../lib/openapi'
 import { db } from '../lib/db'
 import {
+    stories,
     storyTranslations,
+    religiousStories,
     religiousStoryTranslations,
+    templates,
     templateTranslations,
 } from '../lib/schema'
 
@@ -38,13 +41,16 @@ config.openapi(
         const [storyRes, religiousStoryRes, templateRes] = await Promise.all([
             db.select({ value: count() })
                 .from(storyTranslations)
-                .where(eq(storyTranslations.language, lang)),
+                .innerJoin(stories, eq(stories.id, storyTranslations.storyId))
+                .where(and(eq(stories.isActive, 1), eq(storyTranslations.language, lang))),
             db.select({ value: count() })
                 .from(religiousStoryTranslations)
-                .where(eq(religiousStoryTranslations.language, lang)),
+                .innerJoin(religiousStories, eq(religiousStories.id, religiousStoryTranslations.storyId))
+                .where(and(eq(religiousStories.isActive, 1), eq(religiousStoryTranslations.language, lang))),
             db.select({ value: count() })
                 .from(templateTranslations)
-                .where(eq(templateTranslations.language, lang)),
+                .innerJoin(templates, eq(templates.id, templateTranslations.templateId))
+                .where(and(eq(templates.isActive, 1), eq(templateTranslations.language, lang))),
         ])
 
         const storyCount = storyRes[0]?.value ?? 0

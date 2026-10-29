@@ -49,4 +49,10 @@ describe('public routes', () => {
             templates: false,
         })
     })
+
+    it('GET /config ignores inactive items', async () => {
+        await seedStory('en', 0)
+        const res = await get('/config', en)
+        expect(await res.json()).toMatchObject({ stories: false })
+    })
 })

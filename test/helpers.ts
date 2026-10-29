@@ -34,7 +34,7 @@ export async function seedFaq(order: number, languages: string[]) {
     return id
 }
 
-export async function seedStory(language: string) {
+export async function seedStory(language: string, isActive = 1) {
     const id = crypto.randomUUID()
     await db.insert(schema.stories).values({
         id,
@@ -42,7 +42,7 @@ export async function seedStory(language: string) {
         type: 1,
         coverImageUrl: 'covers/a.png',
         contentImageUrl: null,
-        isActive: 1,
+        isActive,
         ...timestamps,
     })
     await db.insert(schema.storyTranslations).values({
