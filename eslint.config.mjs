@@ -4,10 +4,10 @@ import prettierConfig from 'eslint-config-prettier'
 
 export default [
     {
-        files: ['src/**/*.ts'],
+        files: ['src/**/*.ts', 'test/**/*.ts'],
         languageOptions: {
             parser: tsParser,
-            parserOptions: { project: './tsconfig.json' },
+            parserOptions: { project: ['./tsconfig.json', './test/tsconfig.json'] },
         },
         plugins: { '@typescript-eslint': tseslint },
         rules: {
