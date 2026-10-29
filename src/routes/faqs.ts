@@ -55,7 +55,8 @@ faqs.openapi(
                 .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(faqsTable)
-                .where(eq(faqsTable.isActive, 1)),
+                .innerJoin(faqTranslations, eq(faqTranslations.faqId, faqsTable.id))
+                .where(and(eq(faqsTable.isActive, 1), eq(faqTranslations.language, lang))),
         ])
 
         return c.json({

@@ -53,8 +53,7 @@ describe('pagination', () => {
         expect((await page('pageSize=100')).status).toBe(200)
     })
 
-    // itemCount counts active rows in every language, not just the requested one
-    it.fails('counts only items translated in the requested language', async () => {
+    it('counts only items translated in the requested language', async () => {
         await seedFaq(4, ['tr'])
         const { body } = await page('')
         expect(body?.data.itemCount).toBe(3)

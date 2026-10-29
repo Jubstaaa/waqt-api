@@ -56,7 +56,8 @@ templates.openapi(
                 .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(templatesTable)
-                .where(eq(templatesTable.isActive, 1)),
+                .innerJoin(templateTranslations, eq(templateTranslations.templateId, templatesTable.id))
+                .where(and(eq(templatesTable.isActive, 1), eq(templateTranslations.language, lang))),
         ])
 
         return c.json({
