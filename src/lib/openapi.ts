@@ -1,6 +1,7 @@
 import { z } from '@hono/zod-openapi'
 import type { OpenAPIHonoOptions } from '@hono/zod-openapi'
 import type { Env } from 'hono'
+import { languageDetector } from 'hono/language'
 
 export const SUPPORTED_LANGUAGES = [
     'tr', 'en', 'ar', 'az', 'am', 'bn', 'bs', 'ckb', 'de', 'es', 'fa',
@@ -8,16 +9,16 @@ export const SUPPORTED_LANGUAGES = [
     'ps', 'pt', 'ru', 'so', 'sq', 'sv', 'sw', 'ta', 'th', 'ur', 'uz', 'zh',
 ] as const
 
+export const languageDetection = languageDetector({
+    supportedLanguages: [...SUPPORTED_LANGUAGES],
+    fallbackLanguage: 'en',
+    order: ['header'],
+    caches: false,
+})
+
 export const LangParam = z
-    .preprocess(
-        (val) => {
-            if (typeof val !== 'string') return 'en'
-            // "en,en-US;q=0.9,tr;q=0.8" -> "en"
-            const lang = val.split(',')[0].split(';')[0].split('-')[0].toLowerCase()
-            return (SUPPORTED_LANGUAGES as readonly string[]).includes(lang) ? lang : 'en'
-        },
-        z.enum(SUPPORTED_LANGUAGES).default('en'),
-    )
+    .string()
+    .optional()
     .openapi({
         param: {
             name: 'Accept-Language',

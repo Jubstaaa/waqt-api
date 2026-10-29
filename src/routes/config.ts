@@ -33,7 +33,7 @@ config.openapi(
         },
     }),
     async (c) => {
-        const { 'Accept-Language': lang } = c.req.valid('header')
+        const lang = c.get('language')
 
         const [storyRes, religiousStoryRes, templateRes] = await Promise.all([
             db.select({ value: count() })

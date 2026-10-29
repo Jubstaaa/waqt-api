@@ -7,11 +7,13 @@ import stories from './routes/stories'
 import religiousStories from './routes/religious-stories'
 import templates from './routes/templates'
 import config from './routes/config'
+import { languageDetection } from './lib/openapi'
 
 const app = new OpenAPIHono()
 
 app.use('*', logger())
 app.use('*', cors())
+app.use('*', languageDetection)
 
 app.get('/', (c) => c.json({ status: 'ok', version: '1.0.0' }))
 

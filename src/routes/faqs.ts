@@ -35,7 +35,7 @@ faqs.openapi(
     }),
     async (c) => {
         const { pageIndex, pageSize } = c.req.valid('query')
-        const { 'Accept-Language': lang } = c.req.valid('header')
+        const lang = c.get('language')
 
         const [items, [{ total }]] = await Promise.all([
             db.select({
