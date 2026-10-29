@@ -79,7 +79,8 @@ stories.openapi(
                 .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(storiesTable)
-                .where(eq(storiesTable.isActive, 1)),
+                .innerJoin(storyTranslations, eq(storyTranslations.storyId, storiesTable.id))
+                .where(and(eq(storiesTable.isActive, 1), eq(storyTranslations.language, lang))),
         ])
 
         return c.json({

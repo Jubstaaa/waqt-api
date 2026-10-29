@@ -147,7 +147,11 @@ religiousStories.openapi(
                 .offset((pageIndex - 1) * pageSize),
             db.select({ total: count() })
                 .from(religiousStoriesTable)
-                .where(eq(religiousStoriesTable.isActive, 1)),
+                .innerJoin(
+                    religiousStoryTranslations,
+                    eq(religiousStoryTranslations.storyId, religiousStoriesTable.id),
+                )
+                .where(and(eq(religiousStoriesTable.isActive, 1), eq(religiousStoryTranslations.language, lang))),
         ])
 
         return c.json({
